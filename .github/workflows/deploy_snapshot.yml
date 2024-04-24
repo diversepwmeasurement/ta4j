@@ -1,33 +1,30 @@
-name: Deploy Snapshot
-
-on:
-  push:
-    branches:
-      - 'master'
-
 jobs:
   deploy:
     name: Deploy Snapshot
-    runs-on: ubuntu-latest
-
+    runs-on: self-hosted
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          ref: 'master'
-          fetch-depth: 0
-
-      - name: Setup Java
-        uses: actions/setup-java@v3
-        with:
-          java-version: 11
-          distribution: 'zulu'
-          server-id: sonatype-nexus-snapshots
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_CENTRAL_TOKEN
-
-      - name: Deploy to Maven Central
-        env:
-          MAVEN_USERNAME: ${{ secrets.MAVEN_USER }}
-          MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_PASSWORD }}
-        run: xvfb-run mvn -B deploy
+    - continue-on-error: true
+      name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        ref: master
+    - continue-on-error: true
+      name: Setup Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: zulu
+        java-version: 11
+        server-id: sonatype-nexus-snapshots
+        server-password: MAVEN_CENTRAL_TOKEN
+        server-username: MAVEN_USERNAME
+    - continue-on-error: true
+      env:
+        MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_PASSWORD }}
+        MAVEN_USERNAME: ${{ secrets.MAVEN_USER }}
+      name: Deploy to Maven Central
+      run: xvfb-run mvn -B deploy
+name: Deploy Snapshot
+on:
+  repository_dispatch:
+    types: trigger-ga___deploy_snapshot.yml
